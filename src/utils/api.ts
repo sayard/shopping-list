@@ -2,7 +2,8 @@ import { UserDetails, UserUid } from "../stores/Auth/types";
 import { Product } from "../stores/Products/types";
 import Firebase from "./Firebase";
 
-const db = Firebase.firestore();
+const firestore = Firebase.firestore();
+const realTimeDb = Firebase.database();
 
 class API {
   static async getUserDetails(
@@ -10,7 +11,7 @@ class API {
   ): Promise<UserDetails | null | undefined> {
     let userDetails: UserDetails | null | undefined;
 
-    const querySnapshot = await db.collection("usersDetails").get();
+    const querySnapshot = await firestore.collection("usersDetails").get();
     // eslint-disable-next-line
     querySnapshot.forEach((doc: any) => {
       const data = doc.data();
@@ -22,30 +23,13 @@ class API {
     return userDetails;
   }
 
-  static async getProducts(): Promise<Product[]> {
-    const products: Product[] = [];
-
-    const querySnapshot = await db.collection("products").get();
-    // eslint-disable-next-line
-    querySnapshot.forEach((doc: any) => {
-      const data = doc.data() as Product;
-      products.push({ ...data, uid: doc.id });
-    });
-
-    return products;
-  }
-
   static async addProduct(product: Product): Promise<void> {
     const { uid, ...data } = product;
-    db.collection("products")
-      .doc(uid)
-      .set({
-        ...data,
-      });
+    await realTimeDb.ref(`products/${uid}/`).set({ ...data });
   }
 
   static async removeProduct(uid: string): Promise<void> {
-    db.collection("products").doc(uid).delete();
+    await realTimeDb.ref(`products/${uid}/`).remove();
   }
 }
 

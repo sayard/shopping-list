@@ -2,6 +2,7 @@ import { Box, Checkbox, Typography } from "@material-ui/core";
 import { observer } from "mobx-react";
 import React from "react";
 import { useStore } from "../../hooks/stores";
+import API from "../../utils/api";
 import { ProductProps } from "./types";
 
 const Product: React.FunctionComponent<ProductProps> = ({
@@ -10,7 +11,7 @@ const Product: React.FunctionComponent<ProductProps> = ({
   const [isSelected, setIsSelected] = React.useState(false);
 
   const {
-    products: { isLoading, removeProduct, error },
+    products: { isLoading, error, removeProduct },
   } = useStore();
 
   React.useEffect(() => {

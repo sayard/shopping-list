@@ -5,3 +5,7 @@ export interface Product {
   notes: string;
   quantity: number;
 }
+
+export interface ProductsData {
+  [key: string]: Omit<Product, "uid">;
+}

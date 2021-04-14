@@ -1,3 +1,4 @@
+import React from "react";
 import {
   Box,
   Button,
@@ -5,37 +6,37 @@ import {
   Grid,
   Typography,
 } from "@material-ui/core";
+import { v4 as uuidv4 } from "uuid";
 import { observer } from "mobx-react";
-import React from "react";
 import { useHistory } from "react-router-dom";
 import NewProductDialog from "../../components/NewProductDialog";
 import Product from "../../components/Product";
 import { useStore } from "../../hooks/stores";
+import { NewProductFormInputs } from "../../components/NewProductDialog/types";
+import API from "../../utils/api";
 
 const ShoppingList: React.FunctionComponent = (): React.ReactElement => {
   const history = useHistory();
-  const { products: productsStore, auth } = useStore();
+  const {
+    auth,
+    products: { items: products, isLoading },
+  } = useStore();
   const {
     userDetails: { nickname },
     signOut,
   } = auth;
-  const {
-    isLoading,
-    isLoaded,
-    items,
-    loadProducts,
-    addProduct,
-  } = productsStore;
-
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  const products = [...items];
-  React.useEffect(() => {
-    if (!isLoaded) {
-      loadProducts();
-    }
-  }, [isLoaded, loadProducts]);
 
   const [newProductDialogOpen, setNewProductDialogOpen] = React.useState(false);
+
+  const addProduct = (data: NewProductFormInputs) => {
+    const product = {
+      ...data,
+      uid: uuidv4(),
+      addedBy: nickname as string,
+      notes: data.notes ? data.notes : "",
+    };
+    API.addProduct(product);
+  };
 
   return (
     <Grid container spacing={3}>

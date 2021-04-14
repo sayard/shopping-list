@@ -1,9 +1,8 @@
 import { action, makeObservable, observable, runInAction } from "mobx";
-import { v4 as uuidv4 } from "uuid";
-import { NewProductFormInputs } from "../../components/NewProductDialog/types";
 import API from "../../utils/api";
+import Firebase from "../../utils/Firebase";
 import RootStore from "../Root";
-import { Product } from "./types";
+import { Product, ProductsData } from "./types";
 
 export default class ProductsStore {
   store: RootStore;
@@ -19,60 +18,35 @@ export default class ProductsStore {
   constructor(store: RootStore) {
     this.store = store;
 
+    this.registerObservers();
+
     makeObservable(this, {
       isLoading: observable,
       error: observable,
       items: observable,
-      loadProducts: action.bound,
-      addProduct: action.bound,
       removeProduct: action.bound,
     });
   }
 
-  async loadProducts(): Promise<void> {
-    try {
-      runInAction(() => {
-        this.isLoading = true;
+  registerObservers(): void {
+    this.isLoading = true;
+    Firebase.database()
+      .ref("/products/")
+      .on("value", (snapshot) => {
+        const data: ProductsData = snapshot.val();
+        if (!data) {
+          this.items = [];
+          return;
+        }
+        const newProducts = Object.entries(data).map(([key, productData]) => {
+          return {
+            uid: key,
+            ...productData,
+          };
+        });
+        this.items = newProducts;
       });
-      const products = await API.getProducts();
-      runInAction(() => {
-        this.items = products;
-      });
-    } catch (e) {
-      runInAction(() => {
-        this.error = e;
-      });
-    } finally {
-      runInAction(() => {
-        this.isLoading = false;
-        this.isLoaded = true;
-      });
-    }
-  }
-
-  async addProduct(data: NewProductFormInputs): Promise<void> {
-    try {
-      runInAction(() => {
-        this.isLoading = true;
-      });
-      const product = {
-        ...data,
-        uid: uuidv4(),
-        addedBy: this.store.auth.userDetails.nickname as string,
-        notes: data.notes ? data.notes : "",
-      };
-      await API.addProduct(product);
-      const updatedItems = [...this.items, product];
-      runInAction(() => {
-        this.items = updatedItems;
-      });
-    } catch (e) {
-      this.error = e;
-    } finally {
-      runInAction(() => {
-        this.isLoading = false;
-      });
-    }
+    this.isLoading = false;
   }
 
   async removeProduct(uid: string): Promise<void> {
@@ -90,9 +64,12 @@ export default class ProductsStore {
       );
       runInAction(() => {
         this.items = updatedItems;
+        console.log(this.items);
       });
     } catch (e) {
-      this.error = e;
+      runInAction(() => {
+        this.error = e;
+      });
     } finally {
       runInAction(() => {
         this.isLoading = false;
