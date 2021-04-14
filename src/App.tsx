@@ -1,25 +1,35 @@
-import React from 'react';
-import logo from './logo.svg';
-import './App.css';
+import React from "react";
+import { BrowserRouter } from "react-router-dom";
+import { Provider } from "mobx-react";
+import { createMuiTheme, CssBaseline } from "@material-ui/core";
+import { ThemeProvider } from "@material-ui/styles";
+import MainRouter from "./routes/MainRouter";
+import rootStore from "./stores";
+import "react-toastify/dist/ReactToastify.css";
 
-function App() {
+const darkTheme = createMuiTheme({
+  palette: {
+    type: "dark",
+    primary: {
+      main: "#3700B3",
+    },
+    secondary: {
+      main: "#03DAC6",
+    },
+  },
+});
+
+function App(): React.ReactElement {
   return (
-    <div className="App">
-      <header className="App-header">
-        <img src={logo} className="App-logo" alt="logo" />
-        <p>
-          Edit <code>src/App.tsx</code> and save to reload.
-        </p>
-        <a
-          className="App-link"
-          href="https://reactjs.org"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          Learn React
-        </a>
-      </header>
-    </div>
+    // eslint-disable-next-line react/jsx-props-no-spreading
+    <Provider {...rootStore.stores}>
+      <BrowserRouter>
+        <ThemeProvider theme={darkTheme}>
+          <CssBaseline />
+          <MainRouter />
+        </ThemeProvider>
+      </BrowserRouter>
+    </Provider>
   );
 }
 
